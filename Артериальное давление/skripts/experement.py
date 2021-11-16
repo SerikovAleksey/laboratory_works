@@ -21,18 +21,13 @@ def calibration(mm):
         mmHg.write('- Blood Lab\n\n')
         mmHg.write('- Experiment date = {}\n'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
         mmHg.write('- Experiment duration = {:.2f} s\n'.format(duration_calibration))
-        mmHg.write('- Sampling period = {:.2f} us\n'.format(duration_calibration/len(value_calibration) * 1000000))
+        mmHg.write('- Sampling period = {:.2f} mcs\n'.format(duration_calibration / len(value_calibration) * 1000000))
         mmHg.write('- Sampling frequency = {} Hz\n'.format(int(len(value_calibration) / duration_calibration)))
         mmHg.write('- Samples count = {}\n'.format(len(value_calibration)))
         mmHg.write("\n".join(value_calibration_str))
     print("Калибровка завершена\n")
 
-
-try:
-    spi = spidev.SpiDev()
-    spi.open(0, 0)
-    spi.max_speed_hz = 1600000
-
+def start_calibration():
     print("Проводится калибровка! \n")
     input("Выставьте давление 160\n")
     calibration(160)
@@ -43,10 +38,17 @@ try:
     input("Выставьте давление 40\n")
     calibration(40)
 
+try:
+    spi = spidev.SpiDev()
+    spi.open(0, 0)
+    spi.max_speed_hz = 1600000
+
+    start_calibration()
+
     input("\nГотово для начала эксперимента")
     begin = time.time()
     print("Начало измерений")
-    while (time.time() - begin < 60): #adc() > 1
+    while (time.time() - begin < 60):  # adc() > 1
         value_list.append(adc())
 
 finally:
@@ -62,13 +64,13 @@ finally:
         data.write('- Blood Lab\n\n')
         data.write('- Experiment date = {}\n'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
         data.write('- Experiment duration = {:.2f} s\n'.format(duration))
-        data.write('- Sampling period = {:.2f} us\n'.format(duration / len(value_list) / 1000000))
+        data.write('- Sampling period = {:.2f} mcs\n'.format(duration / len(value_list) * 1000000))
         data.write('- Sampling frequency = {} Hz\n'.format(int(len(value_list) / duration)))
         data.write('- Samples count = {}\n'.format(len(value_list)))
         data.write("\n".join(value_list_str))
 
     plt.plot(value_list)
     plt.show()
- 
+
     GPIO.cleanup()
     spi.close()
